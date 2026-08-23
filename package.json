@@ -1,14 +1,14 @@
 {
-  "name": "rshashi-fintable-panel",
+  "name": "fintable-panel",
   "version": "1.0.0",
   "private": true,
-  "description": "Condensed RFQ table panel with floating filters, bond price formatting, and criteria-based alert popups.",
+  "description": "A condensed table panel for Grafana, allowing floating filters, popups, and filter persistence.",
   "scripts": {
     "build": "webpack --config ./.config/webpack/webpack.config.js --env production",
     "dev": "webpack --watch --config ./.config/webpack/webpack.config.js --env development",
     "typecheck": "tsc --noEmit"
   },
-  "author": "rshashi",
+  "author": "EqualsNotEquals",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20"
