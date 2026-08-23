@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "FinTable",
+  "id": "rshashi-fintable-panel",
+  "info": {
+    "keywords": ["panel", "table", "trading", "alerts", "bonds", "ag-grid"],
+    "description": "Condensed data grid with floating column filters, compound-key de-duplicated alert popups (in-panel and desktop notifications), inline cell editing via SQL templates, saved filter presets, and trading-desk formatting (bond price 32nds, colored/pill/gauge/sparkline cells) — works with any tabular query.",
+    "author": { "name": "rshashi" },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "1.0.1",
+    "updated": "2026-08-14"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=11.0.0",
+    "plugins": []
+  }
+}
