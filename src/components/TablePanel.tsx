@@ -92,6 +92,31 @@ const getStyles = () => ({
       font-weight: 600;
       border-top: 2px solid rgba(127, 127, 127, 0.4);
     }
+
+    /* AG Grid scrolls via dedicated .ag-body-vertical-scroll/-horizontal-scroll
+       elements using the browser's native scrollbar (not a custom-drawn one),
+       so it inherits the OS/browser default thumb color — barely visible
+       against Grafana's dark theme. Neutral gray works against both themes. */
+    .ag-body-vertical-scroll-viewport,
+    .ag-body-horizontal-scroll-viewport {
+      scrollbar-color: rgba(150, 150, 150, 0.6) transparent;
+    }
+    .ag-body-vertical-scroll-viewport::-webkit-scrollbar,
+    .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    .ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb,
+    .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+      background-color: rgba(150, 150, 150, 0.6);
+      border-radius: 6px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+    .ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb:hover,
+    .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(150, 150, 150, 0.9);
+    }
   `,
   toastStack: css`
     position: absolute;
