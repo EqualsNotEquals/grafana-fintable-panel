@@ -6,7 +6,7 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { css, cx } from '@emotion/css';
 import { useStyles2, Modal, Button, Input, Field, Select } from '@grafana/ui';
-import { RfqTableOptions, RfqTableFieldConfig } from '../types';
+import { TableOptions, TableFieldConfig } from '../types';
 import { decimalToThirtySeconds } from '../utils/bondPrice';
 import { pickNewAlertIds } from '../utils/alerts';
 import { renderSqlTemplate } from '../utils/sqlTemplate';
@@ -33,7 +33,7 @@ const MAX_ALERT_BATCH = 15;
 // for the full batch.
 const MAX_FLASH_BATCH = 8;
 
-interface Props extends PanelProps<RfqTableOptions> {}
+interface Props extends PanelProps<TableOptions> {}
 
 interface RowRecord {
   __rowId: string;
@@ -239,7 +239,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
     const fieldDisplayNameMap = new Map<string, string>();
 
     const defs: ColDef[] = frame.fields.map((field) => {
-      const custom = field.config?.custom as RfqTableFieldConfig | undefined;
+      const custom = field.config?.custom as TableFieldConfig | undefined;
       // Some datasource query paths (seen with certain postgres-wire-protocol
       // query modes) mis-tag a genuinely numeric column (e.g. a plain
       // DOUBLE) as a non-number field type — sometimes even delivering its
@@ -486,7 +486,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
     if (!api || !frame) {
       return;
     }
-    const fieldsWithCalc = frame.fields.filter((f) => (f.config?.custom as RfqTableFieldConfig | undefined)?.footerCalc);
+    const fieldsWithCalc = frame.fields.filter((f) => (f.config?.custom as TableFieldConfig | undefined)?.footerCalc);
     if (fieldsWithCalc.length === 0) {
       setFooterRow(null);
       return;
@@ -499,7 +499,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
     });
     const rec: RowRecord = { __rowId: '__footer__' };
     fieldsWithCalc.forEach((field) => {
-      const calc = (field.config?.custom as RfqTableFieldConfig).footerCalc as string;
+      const calc = (field.config?.custom as TableFieldConfig).footerCalc as string;
       const values = filtered.map((r) => r[field.name]);
       rec[field.name] = reduceField({ field: { values, config: field.config } as any, reducers: [calc] })[calc];
     });
@@ -865,7 +865,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
         return;
       }
       const field = frame.fields.find((f) => f.name === fieldName);
-      const template = (field?.config?.custom as RfqTableFieldConfig | undefined)?.editSql;
+      const template = (field?.config?.custom as TableFieldConfig | undefined)?.editSql;
       if (!template) {
         return;
       }
@@ -911,7 +911,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
   );
 
   const editableFields = useMemo(
-    () => (frame ? frame.fields.filter((f) => (f.config?.custom as RfqTableFieldConfig | undefined)?.editable) : []),
+    () => (frame ? frame.fields.filter((f) => (f.config?.custom as TableFieldConfig | undefined)?.editable) : []),
     [frame]
   );
 

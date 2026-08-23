@@ -1,4 +1,4 @@
-export interface RfqTableOptions {
+export interface TableOptions {
   // Display — off by default is `true` (shown), since floating filters are
   // the panel's headline feature; this exists for cases where the extra
   // row isn't wanted (e.g. a compact secondary panel) and every bit of
@@ -67,7 +67,7 @@ export interface RfqTableOptions {
   playSoundOnAlert: boolean;
 
   // "Add row" — inserts a new row via a SQL template using the fields
-  // marked Editable in Overrides (see RfqTableFieldConfig.editable).
+  // marked Editable in Overrides (see TableFieldConfig.editable).
   enableAddRow: boolean;
   addRowSql: string;
 
@@ -87,7 +87,7 @@ export interface RfqTableOptions {
   alertQueryIdField: string;
 }
 
-export const defaultRfqTableOptions: RfqTableOptions = {
+export const defaultTableOptions: TableOptions = {
   showFloatingFilters: true,
   uniqueIdFields: [],
   highlightAmountField: '',
@@ -108,7 +108,7 @@ export const defaultRfqTableOptions: RfqTableOptions = {
 // Per-field override (set via the panel editor's "Overrides" section, same
 // as the native Table panel) rather than a global option, so it can target
 // individual fields regardless of which query produced them.
-export interface RfqTableFieldConfig {
+export interface TableFieldConfig {
   thirtySecondsFormat?: boolean;
   // A @grafana/data ReducerID string (e.g. 'sum', 'mean', 'count'), or empty
   // for no totals-row entry on this field.

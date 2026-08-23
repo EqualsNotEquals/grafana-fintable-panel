@@ -1,5 +1,5 @@
 import { PanelPlugin, fieldReducers } from '@grafana/data';
-import { RfqTableOptions, RfqTableFieldConfig, defaultRfqTableOptions } from './types';
+import { TableOptions, TableFieldConfig, defaultTableOptions } from './types';
 import { TablePanel } from './components/TablePanel';
 import { MultiFieldPicker } from './components/MultiFieldPicker';
 
@@ -10,7 +10,7 @@ const footerCalcOptions = [
   ...fieldReducers.list().map((r) => ({ value: r.id, label: r.name })),
 ];
 
-export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(TablePanel)
+export const plugin = new PanelPlugin<TableOptions, TableFieldConfig>(TablePanel)
   .useFieldConfig({
     useCustomConfig: (builder) => {
       builder
@@ -74,7 +74,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       path: 'showFloatingFilters',
       name: 'Show floating filters',
       description: 'The per-column filter row below the header. Turn off to give the grid more vertical room for data rows.',
-      defaultValue: defaultRfqTableOptions.showFloatingFilters,
+      defaultValue: defaultTableOptions.showFloatingFilters,
       category: ['Display'],
     })
     .addCustomEditor({
@@ -86,7 +86,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'single field is unique on its own (e.g. a trade_id that resets daily needs a date field alongside ' +
         'it). Required to de-duplicate alert popups. Mandatory if either popup option below (in Alert rule) ' +
         'is enabled; a warning banner shows on the panel until it\'s set.',
-      defaultValue: defaultRfqTableOptions.uniqueIdFields,
+      defaultValue: defaultTableOptions.uniqueIdFields,
       category: ['Field mapping'],
       editor: MultiFieldPicker,
       settings: { placeholder: 'Select field(s) — combined, they must be unique per row' },
@@ -97,7 +97,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       description:
         'Optional. Numeric field compared against the Alert size threshold (below, in Alert rule) to ' +
         'visually highlight a row. Leave blank to disable the highlight.',
-      defaultValue: defaultRfqTableOptions.highlightAmountField,
+      defaultValue: defaultTableOptions.highlightAmountField,
       category: ['Field mapping'],
     })
     .addFieldNamePicker({
@@ -106,7 +106,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       description:
         'Optional. Only highlight when this field\'s value is non-zero (e.g. a "position" column). Leave ' +
         'blank to highlight on the amount field alone.',
-      defaultValue: defaultRfqTableOptions.highlightConditionField,
+      defaultValue: defaultTableOptions.highlightConditionField,
       category: ['Field mapping'],
     })
     .addCustomEditor({
@@ -116,7 +116,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       description:
         'Optional. Which fields (and in what order) appear in alert popup/notification text, alongside the ' +
         'row\'s own id — e.g. price, symbol, salesperson. Leave empty to show just the id.',
-      defaultValue: defaultRfqTableOptions.popupFields,
+      defaultValue: defaultTableOptions.popupFields,
       category: ['Field mapping'],
       editor: MultiFieldPicker,
       settings: { placeholder: 'Select field(s) to show in popups, in order' },
@@ -127,7 +127,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       description:
         'Highlights a row (red left edge) when the Highlight amount field is above this value (and the ' +
         'Highlight condition field, if set, is non-zero). Not tied to any popup.',
-      defaultValue: defaultRfqTableOptions.alertSizeThreshold,
+      defaultValue: defaultTableOptions.alertSizeThreshold,
       category: ['Alert rule'],
     })
     .addBooleanSwitch({
@@ -137,7 +137,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'Simplest possible rule: every row this panel\'s query returns fires a popup, no criteria needed. ' +
         'Useful for a dedicated second copy of this panel pointed at a query already filtered to whatever ' +
         'you care about (e.g. WHERE salesperson = \'R. Patel\') — avoids writing any alert SQL at all.',
-      defaultValue: defaultRfqTableOptions.popupForAllRows,
+      defaultValue: defaultTableOptions.popupForAllRows,
       category: ['Alert rule'],
     })
     .addBooleanSwitch({
@@ -147,7 +147,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'No SQL, no variables: fires for any row that newly appears in this grid\'s own currently-filtered ' +
         'view — just type into the column floating filters (e.g. ticker "northco", side "sell") and enable ' +
         'this.',
-      defaultValue: defaultRfqTableOptions.popupOnFilteredRows,
+      defaultValue: defaultTableOptions.popupOnFilteredRows,
       category: ['Alert rule'],
     })
     .addBooleanSwitch({
@@ -156,21 +156,21 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       description:
         'Show OS-level desktop notifications for new qualifying RFQs instead of the in-panel popup ' +
         '(the browser will ask for notification permission the first time).',
-      defaultValue: defaultRfqTableOptions.useDesktopNotifications,
+      defaultValue: defaultTableOptions.useDesktopNotifications,
       category: ['Alert rule'],
     })
     .addBooleanSwitch({
       path: 'playSoundOnAlert',
       name: 'Play sound on alert',
       description: 'Plays a short tone alongside each new in-panel popup (desktop notifications already have their own OS sound).',
-      defaultValue: defaultRfqTableOptions.playSoundOnAlert,
+      defaultValue: defaultTableOptions.playSoundOnAlert,
       category: ['Alert rule'],
     })
     .addBooleanSwitch({
       path: 'enableAddRow',
       name: 'Enable "Add row"',
       description: 'Show a toolbar button to insert a new row, using the fields marked Editable in Overrides.',
-      defaultValue: defaultRfqTableOptions.enableAddRow,
+      defaultValue: defaultTableOptions.enableAddRow,
       category: ['Editing'],
     })
     .addTextInput({
@@ -180,7 +180,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'SQL run when a new row is submitted. Use ${row.fieldName} for each editable field\'s entered ' +
         'value, e.g.: INSERT INTO rfqs (rfq_id, bond, salesperson, size) VALUES ' +
         '(${row.rfq_id}, ${row.bond}, ${row.salesperson}, ${row.size})',
-      defaultValue: defaultRfqTableOptions.addRowSql,
+      defaultValue: defaultTableOptions.addRowSql,
       category: ['Editing'],
       settings: { useTextarea: true, rows: 3 },
       showIf: (opts) => opts.enableAddRow,
@@ -193,7 +193,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'Every row it returns fires one popup. Unlike the other rules (which only see this table\'s own rows), ' +
         'this can express relative/cross-row conditions (e.g. a self-join checking bid on one exchange against ' +
         'ask on another) or conditions from a totally unrelated query (e.g. an aggregate risk view).',
-      defaultValue: defaultRfqTableOptions.enableAlertQuery,
+      defaultValue: defaultTableOptions.enableAlertQuery,
       category: ['Alert query'],
     })
     .addTextInput({
@@ -204,7 +204,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
         'query. Example (cross-exchange arbitrage): SELECT a.rfq_id || \'-\' || b.rfq_id AS alert_id, ' +
         'a.exchange AS bid_exchange, a.bid, b.exchange AS ask_exchange, b.ask FROM quotes a JOIN quotes b ' +
         'ON a.bond = b.bond AND a.exchange != b.exchange WHERE a.bid > b.ask',
-      defaultValue: defaultRfqTableOptions.alertQuerySql,
+      defaultValue: defaultTableOptions.alertQuerySql,
       category: ['Alert query'],
       settings: { useTextarea: true, rows: 4 },
       showIf: (opts) => opts.enableAlertQuery,
@@ -213,7 +213,7 @@ export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(Tabl
       path: 'alertQueryIdField',
       name: 'Alert query id field',
       description: 'Column in the alert query\'s result that uniquely identifies an alert instance (for de-dup).',
-      defaultValue: defaultRfqTableOptions.alertQueryIdField,
+      defaultValue: defaultTableOptions.alertQueryIdField,
       category: ['Alert query'],
       showIf: (opts) => opts.enableAlertQuery,
     });
