@@ -149,7 +149,7 @@ const getStyles = () => ({
   `,
 });
 
-export const RfqTablePanel: React.FC<Props> = ({ options, data, width, height, id, timeRange }) => {
+export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, timeRange }) => {
   const styles = useStyles2(getStyles);
 
   const [selected, setSelected] = useState<{ rowId: string | null; col: string | null }>({

@@ -1,6 +1,6 @@
 import { PanelPlugin, fieldReducers } from '@grafana/data';
 import { RfqTableOptions, RfqTableFieldConfig, defaultRfqTableOptions } from './types';
-import { RfqTablePanel } from './components/RfqTablePanel';
+import { TablePanel } from './components/TablePanel';
 import { MultiFieldPicker } from './components/MultiFieldPicker';
 
 // Same reducer functions the native Table panel's column footer uses
@@ -10,7 +10,7 @@ const footerCalcOptions = [
   ...fieldReducers.list().map((r) => ({ value: r.id, label: r.name })),
 ];
 
-export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(RfqTablePanel)
+export const plugin = new PanelPlugin<RfqTableOptions, RfqTableFieldConfig>(TablePanel)
   .useFieldConfig({
     useCustomConfig: (builder) => {
       builder
