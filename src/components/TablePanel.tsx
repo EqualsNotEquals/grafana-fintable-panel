@@ -5,7 +5,7 @@ import { ColDef, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { css, cx } from '@emotion/css';
-import { useStyles2, Modal, Button, Input, Field, Select } from '@grafana/ui';
+import { useStyles2, Modal, Button, Input, Field, Select, Icon } from '@grafana/ui';
 import { TableOptions, TableFieldConfig } from '../types';
 import { decimalToThirtySeconds } from '../utils/bondPrice';
 import { pickNewAlertIds } from '../utils/alerts';
@@ -190,9 +190,20 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
   const [addError, setAddError] = useState<string | null>(null);
   const [addSubmitting, setAddSubmitting] = useState(false);
   const [notifPermission, setNotifPermission] = useState(getNotificationPermission());
+  const [quickFilterText, setQuickFilterText] = useState('');
   const [saveFilterOpen, setSaveFilterOpen] = useState(false);
   const [saveFilterName, setSaveFilterName] = useState('');
   const [selectedPresetName, setSelectedPresetName] = useState<string | null>(null);
+  // Panel `id` alone is only unique *within* a single dashboard — Grafana
+  // reuses small integer ids across dashboards (and across copy-pasted
+  // panels), so keying localStorage on `id` alone let filters/presets from
+  // one dashboard's panel bleed into an unrelated panel that happened to
+  // land on the same id. Fold in the dashboard UID so persistence is scoped
+  // to this exact panel instance. Falls back to just `id` if the UID isn't
+  // available (e.g. panel edit preview, which has no saved dashboard yet).
+  const dashboardUid: string | undefined = (data.request as any)?.dashboardUID;
+  const storageScope = dashboardUid ? `${dashboardUid}-${id}` : String(id);
+
   // Plain localStorage (per-browser) — usePluginUserStorage was tried here
   // but its backend API 404s in this Grafana install (alpha/experimental
   // feature, evidently not enabled), and its internal lock-serialization
@@ -200,7 +211,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
   // real page hangs. Reverted for reliability.
   const [savedFilters, setSavedFilters] = useState<Record<string, any>>(() => {
     try {
-      const raw = localStorage.getItem(`rfqtable-filter-presets-${id}`);
+      const raw = localStorage.getItem(`rfqtable-filter-presets-${storageScope}`);
       return raw ? JSON.parse(raw) : {};
     } catch {
       return {};
@@ -222,10 +233,10 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
   // so a given row only ever pops once total, even if it satisfies both at
   // once. The alert-query mechanism keeps its own key since its ids aren't
   // necessarily this table's own row ids at all.
-  const rowAlertStorageKeyRef = useRef(`rfqtable-seen-rowalert-ids-${id}`);
-  const queryStorageKeyRef = useRef(`rfqtable-seen-queryalert-ids-${id}`);
-  const filterStorageKeyRef = useRef(`rfqtable-filter-model-${id}`);
-  const filterPresetsStorageKeyRef = useRef(`rfqtable-filter-presets-${id}`);
+  const rowAlertStorageKeyRef = useRef(`rfqtable-seen-rowalert-ids-${storageScope}`);
+  const queryStorageKeyRef = useRef(`rfqtable-seen-queryalert-ids-${storageScope}`);
+  const filterStorageKeyRef = useRef(`rfqtable-filter-model-${storageScope}`);
+  const filterPresetsStorageKeyRef = useRef(`rfqtable-filter-presets-${storageScope}`);
   const gridApiRef = useRef<any>(null);
   const isRevertingRef = useRef(false);
 
@@ -291,6 +302,17 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
       // against "99-16+" rather than a numeric comparison) uses text filter.
       const useNumericFilter = isNumericType && !isPriceField;
 
+      // Whether the user has explicitly picked a Unit for this field
+      // (Standard options / Overrides) — when they have, Grafana's own
+      // display pipeline below already knows how to format it (currency,
+      // percent, SI-prefixed "short", etc.) and takes precedence. When they
+      // haven't, the "none" unit's default formatter just stringifies the
+      // raw number with no thousands separators (e.g. "1000000"), which
+      // reads poorly for anything but tiny values — so plain numeric
+      // columns without an explicit unit get locale-formatted (1,000,000)
+      // instead.
+      const hasExplicitUnit = Boolean(field.config?.unit) && field.config.unit !== 'none';
+
       const formatValue = (raw: any): string => {
         if (raw == null) {
           return '';
@@ -298,6 +320,15 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
         const value = needsNumericCoercion && isNumericString(raw) ? Number(raw) : raw;
         if (isPriceField && typeof value === 'number') {
           return decimalToThirtySeconds(value);
+        }
+        if (isNumericType && typeof value === 'number' && !hasExplicitUnit) {
+          const decimals = field.config?.decimals;
+          return value.toLocaleString(
+            undefined,
+            decimals != null
+              ? { minimumFractionDigits: decimals, maximumFractionDigits: decimals }
+              : { maximumFractionDigits: 6 }
+          );
         }
         // Runs the value through Grafana's standard display pipeline, so
         // per-field Unit/Decimals overrides (set in the Overrides section,
@@ -1042,6 +1073,13 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
       )}
 
       <div className={styles.toolbar}>
+        <Input
+          width={28}
+          prefix={<Icon name="search" />}
+          placeholder="Search all columns..."
+          value={quickFilterText}
+          onChange={(e) => setQuickFilterText((e.target as HTMLInputElement).value)}
+        />
         <Select
           width={22}
           placeholder="Load saved filter..."
@@ -1101,6 +1139,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
         <AgGridReact
           rowData={rows}
           columnDefs={colDefs}
+          quickFilterText={quickFilterText}
           theme="legacy"
           multiSortKey="ctrl"
           animateRows={false}
