@@ -257,7 +257,11 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
       return '';
     }
     return frame.fields
-      .map((f) => `${f.name}:${f.type}:${JSON.stringify(f.config?.custom)}:${f.config?.displayName ?? ''}`)
+      .map(
+        (f) =>
+          `${f.name}:${f.type}:${JSON.stringify(f.config?.custom)}:${f.config?.displayName ?? ''}:` +
+          `${f.config?.unit ?? ''}:${f.config?.decimals ?? ''}`
+      )
       .join('|');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frame]);
@@ -278,16 +282,22 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
       const custom = field.config?.custom as TableFieldConfig | undefined;
       // Some datasource query paths (seen with certain postgres-wire-protocol
       // query modes) mis-tag a genuinely numeric column (e.g. a plain
-      // DOUBLE) as a non-number field type — sometimes even delivering its
+      // DOUBLE) as a *string* field type — sometimes even delivering its
       // values as numeric-looking strings ("123.45") rather than real
       // numbers. Left alone, this silently downgrades the column to a text
       // "contains" filter with no Greater than/Between. Fall back to
-      // sniffing the actual values when the declared type disagrees.
+      // sniffing the actual values when a string-typed field's values all
+      // look numeric. Deliberately scoped to FieldType.string only (not
+      // "any non-number type") — earlier this also matched FieldType.time
+      // (and any other declared type) whenever its raw values happened to
+      // look like numbers, e.g. an epoch-ms time field, which routed real
+      // timestamps through numeric/locale formatting instead of Grafana's
+      // own date display pipeline.
       const declaredNumeric = field.type === FieldType.number;
       const sampledValues = (field.values as any[]).filter((v) => v != null).slice(0, 20);
       const isNumericString = (v: any) => typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v));
       const looksNumeric =
-        !declaredNumeric &&
+        field.type === FieldType.string &&
         sampledValues.length > 0 &&
         sampledValues.every((v) => (typeof v === 'number' && !Number.isNaN(v)) || isNumericString(v));
       const isNumericType = declaredNumeric || looksNumeric;
@@ -305,13 +315,17 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
       // Whether the user has explicitly picked a Unit for this field
       // (Standard options / Overrides) — when they have, Grafana's own
       // display pipeline below already knows how to format it (currency,
-      // percent, SI-prefixed "short", etc.) and takes precedence. When they
-      // haven't, the "none" unit's default formatter just stringifies the
-      // raw number with no thousands separators (e.g. "1000000"), which
-      // reads poorly for anything but tiny values — so plain numeric
-      // columns without an explicit unit get locale-formatted (1,000,000)
-      // instead.
+      // percent, SI-prefixed "short", etc.) and takes precedence over the
+      // opt-in thousands-separator override below.
       const hasExplicitUnit = Boolean(field.config?.unit) && field.config.unit !== 'none';
+      // Opt-in only (TableFieldConfig.thousandsSeparator, per-field
+      // Override) — this used to apply automatically to every numeric
+      // field lacking an explicit unit, but that's indistinguishable from
+      // an encoded-integer column that isn't a quantity at all (e.g. a
+      // yyyyMMdd date, or a timestamp whose type got misdetected), and
+      // mangled those into e.g. "20,260,825". Locale-grouping now only
+      // happens where a field is explicitly marked for it.
+      const useThousandsSeparator = Boolean(custom?.thousandsSeparator);
 
       const formatValue = (raw: any): string => {
         if (raw == null) {
@@ -321,7 +335,7 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
         if (isPriceField && typeof value === 'number') {
           return decimalToThirtySeconds(value);
         }
-        if (isNumericType && typeof value === 'number' && !hasExplicitUnit) {
+        if (isNumericType && typeof value === 'number' && useThousandsSeparator && !hasExplicitUnit) {
           const decimals = field.config?.decimals;
           return value.toLocaleString(
             undefined,

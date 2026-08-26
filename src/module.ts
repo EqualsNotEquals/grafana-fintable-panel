@@ -21,6 +21,13 @@ export const plugin = new PanelPlugin<TableOptions, TableFieldConfig>(TablePanel
           defaultValue: false,
           category: ['FinTable'],
         })
+        .addBooleanSwitch({
+          path: 'thousandsSeparator',
+          name: 'Use thousands separator',
+          description: 'Render this numeric field with locale grouping, e.g. 1,000,000 instead of 1000000.',
+          defaultValue: false,
+          category: ['FinTable'],
+        })
         .addSelect({
           path: 'footerCalc',
           name: 'Totals row function',

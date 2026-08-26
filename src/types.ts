@@ -110,6 +110,16 @@ export const defaultTableOptions: TableOptions = {
 // individual fields regardless of which query produced them.
 export interface TableFieldConfig {
   thirtySecondsFormat?: boolean;
+
+  // Opt-in per-field: render a plain number with locale thousands
+  // separators (e.g. 1,000,000) instead of Grafana's raw "none"-unit
+  // formatting. Off by default — auto-applying this to every numeric field
+  // used to also catch encoded-integer columns that aren't really
+  // quantities (e.g. a yyyyMMdd date stored as a number, or a timestamp
+  // column whose type got misdetected), which mangled them into nonsense
+  // like "20,260,825". Turn this on per-field for actual quantity columns
+  // (size, notional, etc).
+  thousandsSeparator?: boolean;
   // A @grafana/data ReducerID string (e.g. 'sum', 'mean', 'count'), or empty
   // for no totals-row entry on this field.
   footerCalc?: string;
