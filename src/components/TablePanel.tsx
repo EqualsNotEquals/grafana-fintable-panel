@@ -571,7 +571,11 @@ export const TablePanel: React.FC<Props> = ({ options, data, width, height, id, 
     fieldsWithCalc.forEach((field) => {
       const calc = (field.config?.custom as TableFieldConfig).footerCalc as string;
       const values = filtered.map((r) => r[field.name]);
-      rec[field.name] = reduceField({ field: { values, config: field.config } as any, reducers: [calc] })[calc];
+      // reduceField's own "sum" (and a few other) reducers only accumulate
+      // when field.type is number/time (see @grafana/data's doStandardCalcs)
+      // — omitting `type` here silently produced a sum of 0 for every
+      // field, regardless of its actual values.
+      rec[field.name] = reduceField({ field: { values, type: field.type, config: field.config } as any, reducers: [calc] })[calc];
     });
     setFooterRow(rec);
   }, [frame]);
